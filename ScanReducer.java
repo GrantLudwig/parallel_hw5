@@ -37,5 +37,9 @@ public class ScanReducer extends GeneralScan<Integer, Integer, Integer> {
 
         ScanReducer test = new ScanReducer(data);
         System.out.println(test.getReduction(0));
+        Integer[] scanData = new Integer[16];
+        test.getScan(scanData);
+        for (int i = 0; i < scanData.length; i++)
+            System.out.print(scanData[i] + " ");
     }
 }

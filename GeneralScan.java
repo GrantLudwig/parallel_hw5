@@ -4,7 +4,11 @@
  * General Scan
  */
 
+import java.util.ArrayList;
+import java.util.List;
 import java.lang.Math;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveAction;
 
 /**
  *
@@ -19,6 +23,7 @@ public class GeneralScan<T, S, U> {
     private int n; // size of data
     private int height;
     private int n_threads;
+    private ForkJoinPool forkPool;
 
     private static final int ROOT = 0;
 
@@ -28,6 +33,7 @@ public class GeneralScan<T, S, U> {
         this.data = raw;
         this.height = (int) Math.ceil(Math.log(n) / Math.log(2));
         this.n_threads = n_threads;
+        forkPool = new ForkJoinPool(n_threads);
 
         if (1 << height != n)
             throw new IllegalArgumentException("Data size must be power of 2 for now");
@@ -75,13 +81,17 @@ public class GeneralScan<T, S, U> {
 
     private boolean reduce(int i) {
         if (!isLeaf(i)) {
-//            if (i < n_threads - 1) {
-//                // Threaded
-//            }
-//            else {
+            if (i < n_threads - 1) {
+                List<reduceAction> tasks = new ArrayList<reduceAction>();
+                tasks.add = new reduce(left(i));
+                tasks.add = new reduce(right(i));
+                for (RecursiveAction subTask: tasks)
+                    subTask.fork();
+            }
+            else {
                 reduce(left(i));
                 reduce(right(i));
-//            }
+            }
             interior[i] = combine(value(left(i)), value(right(i)));
         }
         return true;
@@ -114,7 +124,7 @@ public class GeneralScan<T, S, U> {
     }
 
     private int right(int i) {
-        return left(i);
+        return left(i) + 1;
     }
 
     private boolean isLeaf(int i) {
