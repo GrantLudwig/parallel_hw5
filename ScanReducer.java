@@ -5,8 +5,11 @@
  */
 
 public class ScanReducer extends GeneralScan<Integer, Integer, Integer> {
+    private static final int N = 1<<22;
+    private static final int NUM_THREADS = 16;
+
     public ScanReducer(Integer data[]) {
-        super(data, 16);
+        super(data, NUM_THREADS);
     }
 
     @Override
@@ -30,16 +33,16 @@ public class ScanReducer extends GeneralScan<Integer, Integer, Integer> {
     }
 
     public static void main(String[] args) {
-        Integer[] data = new Integer[16];
-        for (int i = 0; i < 16; i++) {
+        Integer[] data = new Integer[N];
+        for (int i = 0; i < N; i++) {
             data[i] = 1;
         }
 
         ScanReducer test = new ScanReducer(data);
         System.out.println(test.getReduction(0));
-        Integer[] scanData = new Integer[16];
-        test.getScan(scanData);
-        for (int i = 0; i < scanData.length; i++)
-            System.out.print(scanData[i] + " ");
+        Integer[] scanData = new Integer[N];
+        //test.getScan(scanData);
+//        for (int i = 0; i < scanData.length; i++)
+//            System.out.print(scanData[i] + " ");
     }
 }
