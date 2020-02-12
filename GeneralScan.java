@@ -18,7 +18,7 @@ import java.util.concurrent.RecursiveAction;
  */
 public class GeneralScan<ElemType, TallyType, ResultType> {
     private ElemType[] data;
-    private Object[] interior; // actually type S
+    private Object[] interior; // actually TallyType
     private boolean reduced;
     private int n; // size of data
     private int height;
@@ -37,7 +37,8 @@ public class GeneralScan<ElemType, TallyType, ResultType> {
 
         if (1 << height != n)
             throw new IllegalArgumentException("Data size must be power of 2 for now");
-        interior = new Object[n - 1];
+        //interior = new Object[n - 1];
+        interior = new Object[n_threads * 2];
     }
 
     public ResultType getReduction(int i) {
@@ -51,8 +52,11 @@ public class GeneralScan<ElemType, TallyType, ResultType> {
     }
 
     public void getScan(ResultType output[]) {
-        //reduced = reduced || reduce(ROOT); // FIX
-        scan(ROOT, init(), output);
+        if (!reduced) {
+            forkPool.invoke(new ReduceRecurse(ROOT));
+            reduced = true;
+        }
+        forkPool.invoke(new ScanRecurse(ROOT, init(), output));
     }
 
     protected TallyType init() {
@@ -80,33 +84,6 @@ public class GeneralScan<ElemType, TallyType, ResultType> {
 
         else
             return prepare(data[i - (n - 1)]);
-    }
-
-//    private boolean reduce(int i) {
-//        if (!isLeaf(i)) {
-//            if (i < n_threads - 1) {
-//            }
-//            else {
-//                reduce(left(i));
-//                reduce(right(i));
-//            }
-//            interior[i] = combine(value(left(i)), value(right(i)));
-//        }
-//        return true;
-//    }
-
-    private void scan(int i, TallyType tallyPrior, ResultType output[]) {
-        if (isLeaf(i))
-            output[i - (n - 1)] = gen(combine(tallyPrior, value(i)));
-        else {
-//            if (i < n_threads - 1) {
-//                // Threaded
-//            }
-//            else {
-                scan(left(i), tallyPrior, output);
-                scan(right(i), combine(tallyPrior, value(left(i))), output);
-//            }
-        }
     }
 
     private int size() {
@@ -169,10 +146,47 @@ public class GeneralScan<ElemType, TallyType, ResultType> {
                     //System.out.println("Node: " + node);
                     TallyType tally = init();
                     int rm = rightmost(node);
-                    int lm = leftmost(node);
                     for (int i = leftmost(node); i <= rm; i++)
                         tally = combine(tally, value(i));
                     interior[node] = tally;
+                }
+            }
+        }
+    }
+
+    private class ScanRecurse extends RecursiveAction {
+        private int node;
+        private TallyType tallyPrior;
+        private ResultType output[];
+
+        public ScanRecurse(int i, TallyType tallyPrior, ResultType output[]) {
+            this.node = i;
+            this.tallyPrior = tallyPrior;
+            this.output = output;
+        }
+
+        @Override
+        protected void compute() {
+            if (node < n_threads - 1) {
+                // setup left
+                ScanRecurse left = new ScanRecurse(left(node), tallyPrior, output);
+                left.fork();
+
+                // setup right
+                ScanRecurse right = new ScanRecurse(right(node), combine(tallyPrior, value(left(node))), output);
+                right.fork();
+
+                // join both
+                left.join();
+                right.join();
+            }
+            else {
+                //System.out.println("Node: " + node);
+                TallyType tally = tallyPrior;
+                int rm = rightmost(node);
+                for (int i = leftmost(node); i <= rm; i++) {
+                    tally = combine(tally, value(i));
+                    output[i - (n - 1)] = gen(tally);
                 }
             }
         }

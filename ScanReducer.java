@@ -5,7 +5,7 @@
  */
 
 public class ScanReducer extends GeneralScan<Integer, Integer, Integer> {
-    private static final int N = 1<<22;
+    private static final int N = 1<<7;
     private static final int NUM_THREADS = 16;
 
     public ScanReducer(Integer data[]) {
@@ -41,8 +41,12 @@ public class ScanReducer extends GeneralScan<Integer, Integer, Integer> {
         ScanReducer test = new ScanReducer(data);
         System.out.println(test.getReduction(0));
         Integer[] scanData = new Integer[N];
-        //test.getScan(scanData);
-//        for (int i = 0; i < scanData.length; i++)
-//            System.out.print(scanData[i] + " ");
+        test.getScan(scanData);
+        int testInt = 1;
+        for (int i = 0; i < scanData.length; i++){
+            if (scanData[i] != testInt)
+                System.out.println("Failed");
+            testInt++;
+        }
     }
 }
