@@ -19,7 +19,7 @@ import javax.swing.JFrame;
 public class HeatMapDriver {
     private static final int NUM_THREADS = 16;
     private static final String FILENAME = "observation_test.dat";
-    private static final int DIM = 16;
+    private static final int DIM = 128;
 
     private static final String REPLAY = "Replay";
     private static JFrame application;
@@ -41,6 +41,7 @@ public class HeatMapDriver {
 
         //System.out.println(map.getReduction(0));
 
+        System.out.println("Running Scan on data");
         scanData = new Grid[map.dataSize()];
         map.getScan(scanData);
 //        System.out.println("Scan Data");
@@ -64,11 +65,13 @@ public class HeatMapDriver {
         application.setSize(DIM * 4, (int)(DIM * 4.4));
         application.setVisible(true);
         application.repaint();
+        System.out.println("Animating data");
         animate();
     }
 
     private static HeatMap setupHeatMap(String fileName) {
         ArrayList<ArrayList<Observation>> observations = new ArrayList<ArrayList<Observation>>();
+        System.out.println("Reading from " + fileName);
         try {
             ObjectInputStream in = new ObjectInputStream(new FileInputStream(fileName));
             Observation obs = (Observation) in.readObject();
@@ -83,7 +86,7 @@ public class HeatMapDriver {
             }
             in.close();
         } catch (IOException | ClassNotFoundException e) {
-            System.out.println("reading from " + FILENAME + "failed: " + e);
+            System.out.println("reading from " + fileName + "failed: " + e);
             e.printStackTrace();
             System.exit(1);
         }

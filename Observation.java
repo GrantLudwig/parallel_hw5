@@ -50,9 +50,13 @@ public class Observation implements Serializable {
 		 */
         try {
             ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(FILENAME));
-            for (long t = 0; t < 32; t++)
-                for (double x = -1.0; x < 1.0; x += 0.126)
-                    for (double y = -1.0; y < 1.0; y += 0.126)
+            for (long t = 0; t < 100; t++)
+                for (double x = -1.0; x < 1.0; x += 0.02)
+                    for (double y = 1.0; y > -1.0; y -= 0.01)
+                        out.writeObject(new Observation(t, x, y));
+            for (long t = 100; t < 256; t++)
+                for (double x = -1.0; x < 1.0; x += 0.02)
+                    for (double y = 1.0; y > -1.0; y -= 0.03)
                         out.writeObject(new Observation(t, x, y));
             out.writeObject(new Observation());  // to mark EOF
             out.close();
