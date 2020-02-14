@@ -14,10 +14,16 @@ public class HeatMap extends GeneralScan<Observation[], Grid, Grid> {
     private static final int N = 256;
 
     private int DIM;
+    private int dataSize;
 
     public HeatMap(Observation data[][], int numThreads, int DIM) {
         super(data, numThreads);
         this.DIM = DIM;
+        this.dataSize = data.length;
+    }
+
+    public int dataSize() {
+        return dataSize;
     }
 
     @Override
@@ -82,52 +88,52 @@ public class HeatMap extends GeneralScan<Observation[], Grid, Grid> {
         return tally;
     }
 
-    public static void main(String[] args) {
-        String fileName = "";
-        ArrayList<ArrayList<Observation>> observations = new ArrayList<ArrayList<Observation>>();
-        if (args.length < 1)
-            fileName = FILENAME;
-        else
-            fileName = args[0];
-
-        try {
-            ObjectInputStream in = new ObjectInputStream(new FileInputStream(fileName));
-            Observation obs = (Observation) in.readObject();
-            int timeNum = 0;
-            while (!obs.isEOF()) {
-                observations.add(new ArrayList<Observation>());
-                while (timeNum == obs.time){
-                    observations.get(timeNum).add(obs);
-                    obs = (Observation) in.readObject();
-                }
-                timeNum++;
-            }
-            in.close();
-        } catch (IOException | ClassNotFoundException e) {
-            System.out.println("reading from " + FILENAME + "failed: " + e);
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        Observation[][] observationArray = new Observation[observations.size()][];
-        for (int i = 0; i < observations.size(); i++) {
-            observationArray[i] = observations.get(i).toArray(new Observation[observations.get(i).size()]);
-        }
-
-        // numThreads used must be less than the size of the data being computed
-        int numThreads = NUM_THREADS;
-        if (numThreads > observations.size())
-            numThreads = observations.size();
-        HeatMap test = new HeatMap(observationArray, numThreads, GRID_SIZE);
-
-        //HeatMap test = new HeatMap(observations.toArray(new Observation[observations.size()]));
-        System.out.println(test.getReduction(0));
-
-        Grid[] scanData = new Grid[observations.size()];
-        test.getScan(scanData);
-        System.out.println("Scan Data");
-        for (int i = 0; i < scanData.length; i++){
-            System.out.println("Time " + i + " " +scanData[i]);
-        }
-    }
+//    public static void main(String[] args) {
+//        String fileName = "";
+//        ArrayList<ArrayList<Observation>> observations = new ArrayList<ArrayList<Observation>>();
+//        if (args.length < 1)
+//            fileName = FILENAME;
+//        else
+//            fileName = args[0];
+//
+//        try {
+//            ObjectInputStream in = new ObjectInputStream(new FileInputStream(fileName));
+//            Observation obs = (Observation) in.readObject();
+//            int timeNum = 0;
+//            while (!obs.isEOF()) {
+//                observations.add(new ArrayList<Observation>());
+//                while (timeNum == obs.time){
+//                    observations.get(timeNum).add(obs);
+//                    obs = (Observation) in.readObject();
+//                }
+//                timeNum++;
+//            }
+//            in.close();
+//        } catch (IOException | ClassNotFoundException e) {
+//            System.out.println("reading from " + FILENAME + "failed: " + e);
+//            e.printStackTrace();
+//            System.exit(1);
+//        }
+//
+//        Observation[][] observationArray = new Observation[observations.size()][];
+//        for (int i = 0; i < observations.size(); i++) {
+//            observationArray[i] = observations.get(i).toArray(new Observation[observations.get(i).size()]);
+//        }
+//
+//        // numThreads used must be less than the size of the data being computed
+//        int numThreads = NUM_THREADS;
+//        if (numThreads > observations.size())
+//            numThreads = observations.size();
+//        HeatMap test = new HeatMap(observationArray, numThreads, GRID_SIZE);
+//
+//        //HeatMap test = new HeatMap(observations.toArray(new Observation[observations.size()]));
+//        System.out.println(test.getReduction(0));
+//
+//        Grid[] scanData = new Grid[observations.size()];
+//        test.getScan(scanData);
+//        System.out.println("Scan Data");
+//        for (int i = 0; i < scanData.length; i++){
+//            System.out.println("Time " + i + " " +scanData[i]);
+//        }
+//    }
 }

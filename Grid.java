@@ -24,6 +24,17 @@ public class Grid {
         return sumGrid;
     }
 
+    public int maxCount() {
+        int max = 0;
+        for (int i = 0; i < this.size; i++) {
+            for (int j = 0; j < this.size; j++) {
+                if (grid[i][j] > max)
+                    max = grid[i][j];
+            }
+        }
+        return max;
+    }
+
     public String toString() {
         String output = "";
         for (int i = 0; i < size; i++) { // y
