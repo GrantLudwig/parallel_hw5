@@ -1,7 +1,7 @@
 /*
  * Grant Ludwig
  * CPSC 5600, Seattle University
- * General Scan
+ * GeneralScan.java
  */
 
 import java.util.ArrayList;
@@ -133,13 +133,13 @@ public class GeneralScan<ElemType, TallyType, ResultType> {
                     ReduceRecurse left = new ReduceRecurse(left(node));
                     left.fork();
 
-                    // setup right
+                    // run right
                     ReduceRecurse right = new ReduceRecurse(right(node));
-                    right.fork();
+                    right.compute();
 
                     // join both
                     left.join();
-                    right.join();
+                    // right.join();
                     interior[node] = combine(value(left(node)), value(right(node)));
                 }
                 else {
@@ -172,13 +172,12 @@ public class GeneralScan<ElemType, TallyType, ResultType> {
                 ScanRecurse left = new ScanRecurse(left(node), tallyPrior, output);
                 left.fork();
 
-                // setup right
+                // run right
                 ScanRecurse right = new ScanRecurse(right(node), combine(tallyPrior, value(left(node))), output);
-                right.fork();
+                right.compute();
 
-                // join both
                 left.join();
-                right.join();
+                //right.join();
             }
             else {
                 //System.out.println("Node: " + node);
