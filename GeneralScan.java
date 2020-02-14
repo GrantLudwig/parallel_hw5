@@ -11,7 +11,8 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
 
 /**
- *
+ * General Scan class
+ * Adapted from C++ version by Kevin Lundeen
  * @param <ElemType>
  * @param <TallyType>
  * @param <ResultType>
@@ -27,6 +28,11 @@ public class GeneralScan<ElemType, TallyType, ResultType> {
 
     private static final int ROOT = 0;
 
+    /**
+     * Constructor
+     * @param raw data being passed in
+     * @param n_threads
+     */
     public GeneralScan(final ElemType[] raw, int n_threads) {
         this.reduced = false;
         this.n = raw.length;
@@ -37,10 +43,14 @@ public class GeneralScan<ElemType, TallyType, ResultType> {
 
         if (1 << height != n)
             throw new IllegalArgumentException("Data size must be power of 2 for now");
-        //interior = new Object[n - 1];
-        interior = new Object[n_threads * 2];
+        interior = new Object[n_threads * 2]; // O(P*2) -> O(P)
     }
 
+    /**
+     * Runs a parallel reduce
+     * @param i
+     * @return
+     */
     public ResultType getReduction(int i) {
         if (i >= size())
             throw new IllegalArgumentException("Non-existant node");
@@ -51,6 +61,10 @@ public class GeneralScan<ElemType, TallyType, ResultType> {
         return gen(value(i));
     }
 
+    /**
+     * Runs a parallel scan
+     * @param output
+     */
     public void getScan(ResultType output[]) {
         if (!reduced) {
             forkPool.invoke(new ReduceRecurse(ROOT));
@@ -59,22 +73,47 @@ public class GeneralScan<ElemType, TallyType, ResultType> {
         forkPool.invoke(new ScanRecurse(ROOT, init(), output));
     }
 
+    /**
+     * Must be overloaded in class that extends
+     * @return TallyType
+     */
     protected TallyType init() {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Must be overloaded in class that extends
+     * @param datum ElemType
+     * @return TallyType
+     */
     protected TallyType prepare(final ElemType datum){
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Must be overloaded in class that extends
+     * @param left TallyType
+     * @param right TallyType
+     * @return TallyType
+     */
     protected TallyType combine(final TallyType left, final TallyType right) {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Must be overloaded in class that extends
+     * @param tally TallyType
+     * @return ResultType
+     */
     protected ResultType gen(final TallyType tally) {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Gets the value of the node at that index
+     * @param i int
+     * @return TallyType
+     */
     private TallyType value(int i) {
         if (i < n - 1) {
             @SuppressWarnings("unchecked")
@@ -118,9 +157,16 @@ public class GeneralScan<ElemType, TallyType, ResultType> {
         return i;
     }
 
+    /**
+     * Class for running the parallel reduce using ForkPools
+     */
     private class ReduceRecurse extends RecursiveAction {
         private int node;
 
+        /**
+         * Constructor
+         * @param i int, the node to reduce
+         */
         public ReduceRecurse(int i) {
             this.node = i;
         }
@@ -139,11 +185,9 @@ public class GeneralScan<ElemType, TallyType, ResultType> {
 
                     // join both
                     left.join();
-                    // right.join();
                     interior[node] = combine(value(left(node)), value(right(node)));
                 }
-                else {
-                    //System.out.println("Node: " + node);
+                else { // Runs schwartz
                     TallyType tally = init();
                     int rm = rightmost(node);
                     for (int i = leftmost(node); i <= rm; i++)
@@ -154,11 +198,20 @@ public class GeneralScan<ElemType, TallyType, ResultType> {
         }
     }
 
+    /**
+     * Class for running the parallel scan using ForkPools
+     */
     private class ScanRecurse extends RecursiveAction {
         private int node;
         private TallyType tallyPrior;
         private ResultType output[];
 
+        /**
+         * Constructor
+         * @param i int, the node to scan from
+         * @param tallyPrior TallyType
+         * @param output ResultType
+         */
         public ScanRecurse(int i, TallyType tallyPrior, ResultType output[]) {
             this.node = i;
             this.tallyPrior = tallyPrior;
@@ -177,10 +230,8 @@ public class GeneralScan<ElemType, TallyType, ResultType> {
                 right.compute();
 
                 left.join();
-                //right.join();
             }
-            else {
-                //System.out.println("Node: " + node);
+            else { // Runs schwartz
                 TallyType tally = tallyPrior;
                 int rm = rightmost(node);
                 for (int i = leftmost(node); i <= rm; i++) {

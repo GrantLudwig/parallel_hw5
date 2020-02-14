@@ -1,7 +1,20 @@
+/*
+ * Grant Ludwig
+ * CPSC 5600, Seattle University
+ * GeneralScan.java
+ */
+
+/**
+ * Class for holding the Observation count on a section of the "detector"
+ */
 public class Grid {
     public int[][] grid;
     public int size;
 
+    /**
+     * Constuctor
+     * @param size
+     */
     public Grid(int size) {
         this.grid = new int[size][size];
         this.size = size;
@@ -10,7 +23,7 @@ public class Grid {
     /**
      * Returns the sum of the grid and the passed in right grid
      * @param right
-     * @return
+     * @return Grid
      */
     public Grid sum(Grid right) {
         if (this.size != right.size)
@@ -24,6 +37,10 @@ public class Grid {
         return sumGrid;
     }
 
+    /**
+     * Returns the max count in the grid
+     * @return int
+     */
     public int maxCount() {
         int max = 0;
         for (int i = 0; i < this.size; i++) {
